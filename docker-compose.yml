@@ -1,0 +1,37 @@
+version: "2.4"
+services:
+  database:
+    image: quay.io/azavea/postgis:3-postgres12.4-slim
+    environment:
+      - POSTGRES_USER=pgtest
+      - POSTGRES_PASSWORD=pgtest
+      - POSTGRES_DB=pgtest
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "pgtest"]
+      interval: 3s
+      timeout: 3s
+      retries: 3
+
+  django:
+    image: docker-pg-test
+    environment:
+      - POSTGRES_HOST=database
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=pgtest
+      - POSTGRES_PASSWORD=pgtest
+      - POSTGRES_DB=pgtest
+      # Set defaults for psql
+      - PGHOST=database
+      - PGPORT=5432
+      - PGUSER=pgtest
+      - PGPASSWORD=pgtest
+    build:
+      context: ./src/django
+      dockerfile: Dockerfile
+    volumes:
+      - ./src/django:/usr/local/src
+    working_dir: /usr/local/src
+    depends_on:
+      database:
+        condition: service_healthy
+    entrypoint: ''
